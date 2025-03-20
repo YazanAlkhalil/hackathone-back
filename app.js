@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use((req, res, next) => {
   // Set a longer timeout for specific routes
   if (req.path.includes('/api/generate-content')) {
-    req.setTimeout(600000); // 5 minutes for content generation
+    req.setTimeout(60000000); // 5 minutes for content generation
   }
   next();
 });
@@ -41,9 +41,9 @@ const http = require('http');
 const server = http.createServer(app);
 
 // Set server timeout to a higher value
-server.timeout = 600000; // 10 minutes
-server.keepAliveTimeout = 600000; // 2 minutes
-server.headersTimeout = 600000; // 2 minutes
+server.timeout = 60000000; // 10 minutes
+server.keepAliveTimeout = 60000000; // 2 minutes
+server.headersTimeout = 60000000; // 2 minutes
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
