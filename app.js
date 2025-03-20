@@ -28,8 +28,9 @@ app.use((err, req, res, next) => {
               
 // Start server
 const PORT =  3000;
-app.listen(PORT, () => {
-  console.log("test");
-  
+const http = require('http');
+const server = http.createServer(app);
+server.timeout = 0; // 6000000ms = 6000 seconds
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
