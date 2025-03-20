@@ -727,6 +727,8 @@ router.post('/generate-quizes',async (req,res)=>{
 async function getDeepSeekResponse(prompt, retries = 3) {
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
+            console.log(`DeepSeek API call attempt ${attempt} for: ${prompt.substring(0, 50)}...`);
+            
             const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
                 model: "deepseek/deepseek-chat:free",
                 messages: [
@@ -738,26 +740,26 @@ async function getDeepSeekResponse(prompt, retries = 3) {
             }, {
                 headers: {
                     "Authorization": "Bearer " + process.env.DSAPIKEY,
-
                     "Content-Type": "application/json"
-                }
+                },
+                // Add timeout to prevent hanging requests
+                timeout: 60000 // 60 seconds timeout for each API call
             });
 
-
-            console.log(response.data)
-
+            console.log(`DeepSeek API call successful on attempt ${attempt}`);
             const content = response.data.choices[0].message.content;
-
-
             return content.replace(/<think>[\s\S]*?<\/think>\n?/, '').trim();
         } catch (error) {
-            console.error(`Attempt ${attempt} failed for prompt: ${prompt.substring(0, 50)}...`);
+            console.error(`DeepSeek API call failed on attempt ${attempt}:`, error.message);
+            
+            // If we've reached max retries, throw a more informative error
             if (attempt === retries) {
-                throw error; // If last attempt, throw the error
+                throw new Error(`Failed to get response from DeepSeek after ${retries} attempts: ${error.message}`);
             }
 
             // Exponential backoff before retrying
             const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+            console.log(`Retrying in ${delay/1000} seconds...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }

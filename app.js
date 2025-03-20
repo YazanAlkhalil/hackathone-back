@@ -1,8 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const generateContentRouter = require('./generateContent');
-const http = require('http');
-
 const cors=require('cors')
 const app = express();
 const corsOptions = {
@@ -12,12 +10,21 @@ const corsOptions = {
 
 app.use(cors());
 // Middleware
-app.use(bodyParser.json());
-app.get('/',(req,res) =>{
+app.use(bodyParser.json({ limit: '50mb' })); // Increase payload size limit
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
+// Set higher timeout for the server
+app.use((req, res, next) => {
+  // Set a longer timeout for specific routes
+  if (req.path.includes('/api/generate-content')) {
+    req.setTimeout(600000); // 5 minutes for content generation
+  }
+  next();
+});
+
+app.get('/',(req,res) =>{
   res.json({hello:"hello"})
-}
-)
+})
 
 // Routes
 app.use('/api', generateContentRouter);
@@ -25,13 +32,19 @@ app.use('/api', generateContentRouter);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: 'Something went wrong!', details: err.message });
 });
               
 // Start server
-const PORT =  3000;
+const PORT = 3000;
+const http = require('http');
 const server = http.createServer(app);
-server.timeout = 0; // 6000000ms = 6000 seconds
+
+// Set server timeout to a higher value
+server.timeout = 600000; // 10 minutes
+server.keepAliveTimeout = 600000; // 2 minutes
+server.headersTimeout = 600000; // 2 minutes
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
