@@ -1,14 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const generateContentRouter = require('./generateContent');
-const cors=require('cors')
+const cors = require('cors');
 const app = express();
 const corsOptions = {
-  origin: 'http://localhost:5173', 
+  origin: '*', // Allow all origins in production or use environment variable
   credentials: true, 
 };
 
-app.use(cors());
+// Use the corsOptions configuration
+app.use(cors(corsOptions));
+
 // Middleware
 app.use(bodyParser.json({ limit: '50mb' })); // Increase payload size limit
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
@@ -17,8 +19,16 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use((req, res, next) => {
   // Set a longer timeout for specific routes
   if (req.path.includes('/api/generate-content')) {
-    req.setTimeout(60000000); // 5 minutes for content generation
+    req.setTimeout(300000); // 5 minutes (300,000 ms) for content generation
+    res.setTimeout(300000); // Also set response timeout
   }
+  next();
+});
+
+// Add keep-alive headers for long-running requests
+app.use((req, res, next) => {
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Keep-Alive', 'timeout=300'); // 5 minutes in seconds
   next();
 });
 
@@ -36,14 +46,14 @@ app.use((err, req, res, next) => {
 });
               
 // Start server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const http = require('http');
 const server = http.createServer(app);
 
-// Set server timeout to a higher value
-server.timeout = 60000000; // 10 minutes
-server.keepAliveTimeout = 60000000; // 2 minutes
-server.headersTimeout = 60000000; // 2 minutes
+// Set server timeout to a more reasonable value
+server.timeout = 300000; // 5 minutes
+server.keepAliveTimeout = 120000; // 2 minutes
+server.headersTimeout = 120000; // 2 minutes
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
