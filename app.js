@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const generateContentRouter = require('./generateContent');
+const http = require('http');
+
 const cors=require('cors')
 const app = express();
 const corsOptions = {
@@ -28,7 +30,6 @@ app.use((err, req, res, next) => {
               
 // Start server
 const PORT =  3000;
-const http = require('http');
 const server = http.createServer(app);
 server.timeout = 0; // 6000000ms = 6000 seconds
 server.listen(PORT, '0.0.0.0', () => {
